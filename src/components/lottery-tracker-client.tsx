@@ -50,7 +50,7 @@ export function LotteryTrackerClient({ initialResults, initialError }: LotteryTr
   }, [initialError, toast, initialResults.length]);
 
   useEffect(() => {
-    if(lastUpdate) {
+    if (lastUpdate) {
       setClientLastUpdate(lastUpdate);
     }
   }, [lastUpdate]);
@@ -80,8 +80,8 @@ export function LotteryTrackerClient({ initialResults, initialError }: LotteryTr
       } else {
         setResults(data);
         setStatus(`${data.length} concursos carregados com sucesso.`);
+        setLastUpdate(new Date());
       }
-      setLastUpdate(new Date());
 
       setTimeout(() => setProgress(0), 1000);
     });
@@ -106,10 +106,10 @@ export function LotteryTrackerClient({ initialResults, initialError }: LotteryTr
       filtered = filtered.filter(r => r.dataApuracao.includes(filterData));
     }
     if (filterDezenas) {
-      const dezenas = filterDezenas.split(/[, ]+/).map(d => d.trim()).filter(Boolean);
+      const dezenas = filterDezenas.split(/[, ]+/).map(d => d.trim().padStart(2, '0')).filter(Boolean);
       if (dezenas.length > 0) {
         filtered = filtered.filter(r => 
-          (r.listaDezenasSorteadas || []).every(dezena => String(dezena).padStart(2, '0').includes(String(dezena).padStart(2, '0')))
+          dezenas.every(dezena => (r.listaDezenasSorteadas || []).includes(dezena))
         );
       }
     }
