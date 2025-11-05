@@ -1,3 +1,5 @@
+"use client";
+
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { LotteryResult } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -58,7 +60,7 @@ export function ResultsTable({ results, isLoading }: ResultsTableProps) {
           {results.length > 0 ? (
             results.map((result, index) => {
               const rateio = result.listaRateioPremio || [];
-              const dezenas = result.listaDezenasSorteadas || [];
+              const dezenas = result.listaDezenas || [];
               const premioSena = rateio.find(p => p.descricaoFaixa.includes('6 acertos'));
               const premioValor = result.indicadorAcumulo 
                 ? `Acumulado` 

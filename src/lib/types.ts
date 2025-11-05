@@ -2,7 +2,8 @@ export interface LotteryResult {
   numero: number;
   nome: string;
   dataApuracao: string;
-  listaDezenasSorteadas: string[];
+  listaDezenas: string[];
+  listaDezenasSorteadas?: string[];
   indicadorAcumulo: boolean;
   valorAcumulado: number;
   valorEstimadoProximoConcurso: number;
