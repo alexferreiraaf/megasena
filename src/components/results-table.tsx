@@ -57,7 +57,9 @@ export function ResultsTable({ results, isLoading }: ResultsTableProps) {
         <TableBody>
           {results.length > 0 ? (
             results.map((result, index) => {
-              const premioSena = result.listaRateioPremio.find(p => p.descricaoFaixa.includes('6 acertos'));
+              const rateio = result.listaRateioPremio || [];
+              const dezenas = result.listaDezenasSorteadas || [];
+              const premioSena = rateio.find(p => p.descricaoFaixa.includes('6 acertos'));
               const premioValor = result.indicadorAcumulo 
                 ? `Acumulado` 
                 : formatCurrency(premioSena?.valorPremio);
@@ -68,7 +70,7 @@ export function ResultsTable({ results, isLoading }: ResultsTableProps) {
                   <TableCell>{result.dataApuracao}</TableCell>
                   <TableCell>
                     <div className="flex flex-nowrap gap-2">
-                      {result.listaDezenasSorteadas.map((dezena) => (
+                      {dezenas.map((dezena) => (
                         <MegaSenaBall key={dezena} number={dezena} />
                       ))}
                     </div>
