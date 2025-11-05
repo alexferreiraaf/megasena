@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, useTransition } from "react";
 import { fetchLastTenResults } from "@/lib/actions";
+import { suggestNumbers } from "@/ai/flows/suggest-numbers-flow";
 import type { LotteryResult } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 
@@ -12,7 +13,8 @@ import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ThemeToggleButton } from "@/components/theme-toggle-button";
 import { ResultsTable } from "@/components/results-table";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Wand2 } from "lucide-react";
+import { Skeleton } from "./ui/skeleton";
 
 interface LotteryTrackerClientProps {
   initialResults: LotteryResult[];
@@ -31,6 +33,9 @@ export function LotteryTrackerClient({ initialResults, initialError }: LotteryTr
   const [filterData, setFilterData] = useState("");
   const [filterDezenas, setFilterDezenas] = useState("");
 
+  const [suggestedNumbers, setSuggestedNumbers] = useState<string[]>([]);
+  const [isSuggesting, setIsSuggesting] = useState(false);
+
   const { toast } = useToast();
 
   useEffect(() => {
@@ -41,13 +46,18 @@ export function LotteryTrackerClient({ initialResults, initialError }: LotteryTr
         title: "Erro ao Carregar Dados",
         description: initialError,
       });
-    } else {
-        setStatus(`${initialResults.length} concursos carregados com sucesso.`);
-        if (initialResults.length > 0) {
-          setLastUpdate(new Date());
-        }
+    } else if (initialResults.length > 0) {
+      setStatus(`${initialResults.length} concursos carregados com sucesso.`);
+      setLastUpdate(new Date());
     }
   }, [initialError, toast, initialResults.length]);
+
+  useEffect(() => {
+    // This effect runs only on the client after hydration
+    if (initialResults.length > 0) {
+      setLastUpdate(new Date());
+    }
+  }, [initialResults.length]);
 
   useEffect(() => {
     if (lastUpdate) {
@@ -87,6 +97,30 @@ export function LotteryTrackerClient({ initialResults, initialError }: LotteryTr
     });
   };
 
+  const handleSuggestNumbers = async () => {
+    setIsSuggesting(true);
+    setSuggestedNumbers([]);
+    try {
+      const historyForAI = results.map(r => ({
+        numero: r.numero,
+        listaDezenas: r.listaDezenas || [],
+      }));
+
+      const response = await suggestNumbers({ history: historyForAI });
+      setSuggestedNumbers(response.suggestedNumbers);
+
+    } catch (error) {
+      console.error("Error suggesting numbers:", error);
+      toast({
+        variant: "destructive",
+        title: "Erro na Sugestão",
+        description: "Não foi possível gerar sugestões no momento.",
+      });
+    } finally {
+      setIsSuggesting(false);
+    }
+  };
+
   useEffect(() => {
     const intervalId = setInterval(() => {
       handleFetchResults();
@@ -109,7 +143,7 @@ export function LotteryTrackerClient({ initialResults, initialError }: LotteryTr
       const dezenas = filterDezenas.split(/[, ]+/).map(d => d.trim().padStart(2, '0')).filter(Boolean);
       if (dezenas.length > 0) {
         filtered = filtered.filter(r => 
-          dezenas.every(dezena => (r.listaDezenasSorteadas || []).includes(dezena))
+          dezenas.every(dezena => (r.listaDezenas || []).includes(dezena))
         );
       }
     }
@@ -131,13 +165,41 @@ export function LotteryTrackerClient({ initialResults, initialError }: LotteryTr
 
         <CardContent>
             <div className="flex flex-col sm:flex-row justify-between items-center pb-4 mb-6 gap-4">
+              <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                 <Button onClick={handleFetchResults} disabled={isPending} className="bg-primary hover:bg-primary/90 w-full sm:w-auto">
                     {isPending ? "Atualizando..." : "Buscar Últimos 10 Resultados"}
                 </Button>
+                 <Button onClick={handleSuggestNumbers} disabled={isSuggesting || results.length === 0} variant="outline" className="w-full sm:w-auto">
+                    <Wand2 className="mr-2 h-4 w-4" />
+                    {isSuggesting ? "Sugerindo..." : "Sugerir Próximas Dezenas"}
+                </Button>
+              </div>
                 <p className="text-xs text-muted-foreground whitespace-nowrap">
                     {clientLastUpdate ? `Última atualização: ${clientLastUpdate.toLocaleTimeString('pt-BR')}` : "Nenhuma atualização"}
                 </p>
             </div>
+
+            {isSuggesting && (
+              <div className="mb-8 p-4 border rounded-lg bg-secondary/50">
+                <p className="text-sm font-medium text-muted-foreground mb-2">A IA está analisando os padrões...</p>
+                <div className="flex gap-2 justify-center">
+                  {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="size-10 rounded-full" />)}
+                </div>
+              </div>
+            )}
+
+            {suggestedNumbers.length > 0 && (
+              <div className="mb-8 p-4 border-2 border-dashed border-accent rounded-lg bg-accent/10">
+                <h3 className="text-lg font-bold text-accent mb-2 text-center">Dezenas Sugeridas pela IA</h3>
+                <div className="flex flex-wrap gap-3 justify-center">
+                  {suggestedNumbers.map((dezena) => (
+                    <div key={dezena} className="flex items-center justify-center size-12 rounded-full text-lg font-bold shadow-md bg-gradient-to-br from-green-500 to-green-700 text-white">
+                      {dezena}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
             
             <div className="space-y-4 mb-8 p-4 border rounded-lg bg-secondary/50">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
