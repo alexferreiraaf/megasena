@@ -23,7 +23,8 @@ export function LotteryTrackerClient({ initialResults, initialError }: LotteryTr
   const [results, setResults] = useState<LotteryResult[]>(initialResults);
   const [isPending, startTransition] = useTransition();
   const [progress, setProgress] = useState(0);
-  const [lastUpdate, setLastUpdate] = useState<Date | null>(initialResults.length > 0 ? new Date() : null);
+  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+  const [clientLastUpdate, setClientLastUpdate] = useState<Date | null>(null);
   const [status, setStatus] = useState("Pronto para consulta.");
 
   const [filterConcurso, setFilterConcurso] = useState("");
@@ -42,8 +43,17 @@ export function LotteryTrackerClient({ initialResults, initialError }: LotteryTr
       });
     } else {
         setStatus(`${initialResults.length} concursos carregados com sucesso.`);
+        if (initialResults.length > 0) {
+          setLastUpdate(new Date());
+        }
     }
   }, [initialError, toast, initialResults.length]);
+
+  useEffect(() => {
+    if(lastUpdate) {
+      setClientLastUpdate(lastUpdate);
+    }
+  }, [lastUpdate]);
 
   const handleFetchResults = () => {
     startTransition(async () => {
@@ -99,7 +109,7 @@ export function LotteryTrackerClient({ initialResults, initialError }: LotteryTr
       const dezenas = filterDezenas.split(/[, ]+/).map(d => d.trim()).filter(Boolean);
       if (dezenas.length > 0) {
         filtered = filtered.filter(r => 
-          dezenas.every(dezena => r.listaDezenasSorteadas.includes(String(dezena).padStart(2, '0')))
+          (r.listaDezenasSorteadas || []).every(dezena => String(dezena).padStart(2, '0').includes(String(dezena).padStart(2, '0')))
         );
       }
     }
@@ -125,7 +135,7 @@ export function LotteryTrackerClient({ initialResults, initialError }: LotteryTr
                     {isPending ? "Atualizando..." : "Buscar Últimos 10 Resultados"}
                 </Button>
                 <p className="text-xs text-muted-foreground whitespace-nowrap">
-                    {lastUpdate ? `Última atualização: ${lastUpdate.toLocaleTimeString('pt-BR')}` : "Nenhuma atualização"}
+                    {clientLastUpdate ? `Última atualização: ${clientLastUpdate.toLocaleTimeString('pt-BR')}` : "Nenhuma atualização"}
                 </p>
             </div>
             

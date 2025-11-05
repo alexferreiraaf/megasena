@@ -30,14 +30,17 @@ export function ThemeProvider({
   enableSystem = true,
   ...props
 }: ThemeProviderProps) {
-  const [theme, setTheme] = useState<Theme>(defaultTheme);
-
-  useEffect(() => {
-    const storedTheme = localStorage.getItem(storageKey) as Theme;
-    if (storedTheme) {
-      setTheme(storedTheme);
+  const [theme, setTheme] = useState<Theme>(() => {
+    if (typeof window === 'undefined') {
+      return defaultTheme;
     }
-  }, [storageKey]);
+    try {
+      const storedTheme = localStorage.getItem(storageKey) as Theme;
+      return storedTheme || defaultTheme;
+    } catch (e) {
+      return defaultTheme;
+    }
+  });
 
   useEffect(() => {
     const root = window.document.documentElement;
@@ -49,12 +52,16 @@ export function ThemeProvider({
     }
 
     root.classList.add(effectiveTheme);
-  }, [theme, enableSystem]);
+    try {
+      localStorage.setItem(storageKey, theme);
+    } catch (e) {
+      // Ignore
+    }
+  }, [theme, enableSystem, storageKey]);
 
   const value = {
     theme,
     setTheme: (newTheme: Theme) => {
-      localStorage.setItem(storageKey, newTheme);
       setTheme(newTheme);
     },
   };
