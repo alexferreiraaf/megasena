@@ -34,6 +34,7 @@ export function LotteryTrackerClient({ initialResults, initialError }: LotteryTr
   const [filterDezenas, setFilterDezenas] = useState("");
 
   const [suggestedNumbers, setSuggestedNumbers] = useState<string[]>([]);
+  const [suggestionExplanation, setSuggestionExplanation] = useState<string | null>(null);
   const [isSuggesting, setIsSuggesting] = useState(false);
 
   const { toast } = useToast();
@@ -51,18 +52,18 @@ export function LotteryTrackerClient({ initialResults, initialError }: LotteryTr
       setLastUpdate(new Date());
     }
   }, [initialError, toast, initialResults.length]);
-
+  
   useEffect(() => {
-    // This effect runs only on the client after hydration
-    if (initialResults.length > 0) {
-      setLastUpdate(new Date());
-    }
+      // This effect runs only on the client after hydration
+      if (initialResults.length > 0) {
+          setLastUpdate(new Date());
+      }
   }, [initialResults.length]);
 
   useEffect(() => {
-    if (lastUpdate) {
-      setClientLastUpdate(lastUpdate);
-    }
+      if (lastUpdate) {
+        setClientLastUpdate(lastUpdate);
+      }
   }, [lastUpdate]);
 
   const handleFetchResults = () => {
@@ -100,6 +101,7 @@ export function LotteryTrackerClient({ initialResults, initialError }: LotteryTr
   const handleSuggestNumbers = async () => {
     setIsSuggesting(true);
     setSuggestedNumbers([]);
+    setSuggestionExplanation(null);
     try {
       const historyForAI = results.map(r => ({
         numero: r.numero,
@@ -108,6 +110,7 @@ export function LotteryTrackerClient({ initialResults, initialError }: LotteryTr
 
       const response = await suggestNumbers({ history: historyForAI });
       setSuggestedNumbers(response.suggestedNumbers);
+      setSuggestionExplanation(response.explanation);
 
     } catch (error) {
       console.error("Error suggesting numbers:", error);
@@ -174,9 +177,9 @@ export function LotteryTrackerClient({ initialResults, initialError }: LotteryTr
                     {isSuggesting ? "Sugerindo..." : "Sugerir Próximas Dezenas"}
                 </Button>
               </div>
-                <p className="text-xs text-muted-foreground whitespace-nowrap">
-                    {clientLastUpdate ? `Última atualização: ${clientLastUpdate.toLocaleTimeString('pt-BR')}` : "Nenhuma atualização"}
-                </p>
+              <p className="text-xs text-muted-foreground whitespace-nowrap">
+                  {clientLastUpdate ? `Última atualização: ${clientLastUpdate.toLocaleTimeString('pt-BR')}` : "Nenhuma atualização"}
+              </p>
             </div>
 
             {isSuggesting && (
@@ -198,6 +201,11 @@ export function LotteryTrackerClient({ initialResults, initialError }: LotteryTr
                     </div>
                   ))}
                 </div>
+                {suggestionExplanation && (
+                  <div className="mt-4 p-3 bg-background/50 rounded-md">
+                    <p className="text-sm text-foreground/80 italic">{suggestionExplanation}</p>
+                  </div>
+                )}
               </div>
             )}
             

@@ -21,6 +21,7 @@ export type SuggestNumbersInput = z.infer<typeof SuggestNumbersInputSchema>;
 
 const SuggestNumbersOutputSchema = z.object({
   suggestedNumbers: z.array(z.string()).length(6).describe("Uma lista de 6 dezenas sugeridas."),
+  explanation: z.string().describe("Uma breve explicação sobre a estratégia usada para sugerir os números."),
 });
 export type SuggestNumbersOutput = z.infer<typeof SuggestNumbersOutputSchema>;
 
@@ -40,7 +41,7 @@ Histórico:
 - Concurso {{numero}}: {{#each listaDezenas}}{{.}}{{#unless @last}}, {{/unless}}{{/each}}
 {{/each}}
 
-Com base nessa análise, sugira 6 dezenas para o próximo concurso. Forneça apenas os números, sem nenhuma explicação adicional.`,
+Com base nessa análise, sugira 6 dezenas para o próximo concurso. Forneça também uma breve explicação sobre a lógica ou padrão que você identificou para chegar a essa sugestão.`,
 });
 
 const suggestNumbersFlow = ai.defineFlow(
