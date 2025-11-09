@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useTransition } from "react";
+import { useState, useEffect, useMemo, useTransition, useCallback } from "react";
 import { fetchLastTenResults } from "@/lib/actions";
 import { suggestNumbers } from "@/ai/flows/suggest-numbers-flow";
 import type { LotteryResult } from "@/lib/types";
@@ -66,7 +66,7 @@ export function LotteryTrackerClient({ initialResults, initialError }: LotteryTr
       }
   }, [lastUpdate]);
 
-  const handleFetchResults = () => {
+  const handleFetchResults = useCallback(() => {
     startTransition(async () => {
       setProgress(0);
       setStatus("Buscando os 10 últimos resultados...");
@@ -96,7 +96,7 @@ export function LotteryTrackerClient({ initialResults, initialError }: LotteryTr
 
       setTimeout(() => setProgress(0), 1000);
     });
-  };
+  }, [toast]);
 
   const handleSuggestNumbers = async () => {
     setIsSuggesting(true);
@@ -130,8 +130,7 @@ export function LotteryTrackerClient({ initialResults, initialError }: LotteryTr
     }, 300000); // 5 minutes
 
     return () => clearInterval(intervalId);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [handleFetchResults]);
 
   const filteredResults = useMemo(() => {
     let filtered = results;
