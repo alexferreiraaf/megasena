@@ -9,7 +9,6 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import type { LotteryResult } from '@/lib/types';
 
 const SuggestNumbersInputSchema = z.object({
   history: z.array(z.object({
@@ -34,14 +33,13 @@ const prompt = ai.definePrompt({
     name: 'suggestNumbersPrompt',
     input: { schema: SuggestNumbersInputSchema },
     output: { schema: SuggestNumbersOutputSchema },
-    prompt: `Você é um especialista em análise de dados de loteria. Analise o histórico de resultados da Mega-Sena a seguir:
+    prompt: `Você é um especialista em análise de dados de loteria. Analise o histórico de resultados da Mega-Sena a seguir e sugira 6 dezenas para o próximo concurso. Forneça também uma breve explicação sobre a lógica ou padrão que você identificou para chegar a essa sugestão.
 
 Histórico:
 {{#each history}}
 - Concurso {{numero}}: {{#each listaDezenas}}{{.}}{{#unless @last}}, {{/unless}}{{/each}}
 {{/each}}
-
-Com base nessa análise, sugira 6 dezenas para o próximo concurso. Forneça também uma breve explicação sobre a lógica ou padrão que você identificou para chegar a essa sugestão.`,
+`,
 });
 
 const suggestNumbersFlow = ai.defineFlow(
