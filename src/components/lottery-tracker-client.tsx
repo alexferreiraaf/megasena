@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useTransition, useCallback } from "react";
 import { fetchLastTenResults } from "@/lib/actions";
-import { suggestNumbers } from "@/ai/flows/suggest-numbers-flow";
+// import { suggestNumbers } from "@/ai/flows/suggest-numbers-flow";
 import type { LotteryResult } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 
@@ -103,14 +103,18 @@ export function LotteryTrackerClient({ initialResults, initialError }: LotteryTr
     setSuggestedNumbers([]);
     setSuggestionExplanation(null);
     try {
-      const historyForAI = results.map(r => ({
-        numero: r.numero,
-        listaDezenas: r.listaDezenas || [],
-      }));
+      // const historyForAI = results.map(r => ({
+      //   numero: r.numero,
+      //   listaDezenas: r.listaDezenas || [],
+      // }));
 
-      const response = await suggestNumbers({ history: historyForAI });
-      setSuggestedNumbers(response.suggestedNumbers);
-      setSuggestionExplanation(response.explanation);
+      // const response = await suggestNumbers({ history: historyForAI });
+      // setSuggestedNumbers(response.suggestedNumbers);
+      // setSuggestionExplanation(response.explanation);
+      toast({
+        title: "Funcionalidade em Manutenção",
+        description: "A sugestão de dezenas está temporariamente desativada.",
+      })
 
     } catch (error) {
       console.error("Error suggesting numbers:", error);
