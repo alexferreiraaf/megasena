@@ -8,6 +8,7 @@
  */
 
 import { ai } from '@/ai/genkit';
+import { googleAI } from '@genkit-ai/google-genai';
 import { z } from 'genkit';
 
 const SuggestNumbersInputSchema = z.object({
@@ -31,6 +32,7 @@ export async function suggestNumbers(input: SuggestNumbersInput): Promise<Sugges
 
 const prompt = ai.definePrompt({
     name: 'suggestNumbersPrompt',
+    model: googleAI('gemini-pro'),
     input: { schema: SuggestNumbersInputSchema },
     output: { schema: SuggestNumbersOutputSchema },
     prompt: `Você é um especialista em análise de dados de loteria. Analise o histórico de resultados da Mega-Sena a seguir e sugira 6 dezenas para o próximo concurso. Forneça também uma breve explicação sobre a lógica ou padrão que você identificou para chegar a essa sugestão.
