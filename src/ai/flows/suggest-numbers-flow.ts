@@ -34,7 +34,6 @@ const prompt = ai.definePrompt({
     name: 'suggestNumbersPrompt',
     input: { schema: SuggestNumbersInputSchema },
     output: { schema: SuggestNumbersOutputSchema },
-    model: googleAI.model('gemini-pro'),
     prompt: `Você é um especialista em análise de dados de loteria. Analise o histórico de resultados da Mega-Sena a seguir e sugira 6 dezenas para o próximo concurso. Forneça também uma breve explicação sobre a lógica ou padrão que você identificou para chegar a essa sugestão.
 
 Histórico:
