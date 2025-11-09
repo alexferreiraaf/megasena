@@ -34,9 +34,13 @@ const prompt = ai.definePrompt({
     input: { schema: SuggestNumbersInputSchema },
     output: { schema: SuggestNumbersOutputSchema },
     model: 'gemini-1.5-flash',
-    prompt: `Você é um especialista em análise de dados de loteria. Analise o histórico de resultados da Mega-Sena a seguir e sugira 6 dezenas para o próximo concurso. Forneça também uma breve explicação sobre a lógica ou padrão que você identificou para chegar a essa sugestão.
+    prompt: `Você é um analista de dados experiente e especialista em padrões de loteria. Sua tarefa é analisar o histórico de resultados da Mega-Sena e fornecer uma sugestão de 6 dezenas para o próximo concurso.
 
-Histórico:
+Sua análise deve ser baseada puramente em dados estatísticos, como frequência de dezenas, dezenas "quentes" (mais sorteadas recentemente) e "frias" (menos sorteadas). Evite misticismo ou sorte.
+
+Baseado na sua análise, forneça as 6 dezenas sugeridas e uma explicação clara e concisa sobre a metodologia estatística que você empregou para chegar a essa combinação.
+
+Histórico dos últimos concursos:
 {{#each history}}
 - Concurso {{numero}}: {{#each listaDezenas}}{{.}}{{#unless @last}}, {{/unless}}{{/each}}
 {{/each}}
