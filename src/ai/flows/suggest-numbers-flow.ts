@@ -33,7 +33,7 @@ const prompt = ai.definePrompt({
     name: 'suggestNumbersPrompt',
     input: { schema: SuggestNumbersInputSchema },
     output: { schema: SuggestNumbersOutputSchema },
-    model: 'googleai/gemini-1.5-flash',
+    model: 'googleai/gemini-pro',
     prompt: `Você é um analista de dados experiente e especialista em padrões de loteria. Sua tarefa é analisar o histórico de resultados da Mega-Sena e fornecer uma sugestão de 6 dezenas para o próximo concurso.
 
 Sua análise deve ser baseada puramente em dados estatísticos, como frequência de dezenas, dezenas "quentes" (mais sorteadas recentemente) e "frias" (menos sorteadas). Evite misticismo ou sorte.
