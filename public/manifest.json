@@ -1,0 +1,21 @@
+{
+  "name": "Mega-Sena Tracker",
+  "short_name": "Mega-Sena",
+  "description": "Confira os últimos resultados da Mega-Sena e receba sugestões de dezenas.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F3F4F6",
+  "theme_color": "#4F46E5",
+  "icons": [
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

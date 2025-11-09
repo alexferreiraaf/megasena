@@ -6,6 +6,7 @@ import { ThemeProvider } from '@/components/theme-provider';
 export const metadata: Metadata = {
   title: 'Mega-Sena Tracker',
   description: 'Confira os últimos 10 resultados da Mega-Sena.',
+  manifest: '/manifest.json',
 };
 
 export default function RootLayout({
@@ -19,6 +20,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet" />
+        <meta name="theme-color" content="#4F46E5" />
       </head>
       <body className="font-body antialiased">
         <ThemeProvider
