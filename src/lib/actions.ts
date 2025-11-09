@@ -7,8 +7,7 @@ const MEGA_SENA_API_URL = 'https://servicebus2.caixa.gov.br/portaldeloterias/api
 async function fetchContest(contestNumber: number): Promise<LotteryResult | null> {
   try {
     const response = await fetch(`${MEGA_SENA_API_URL}/${contestNumber}`, {
-      // Revalidate frequently to get fresh data, but still cache to avoid hitting rate limits
-      next: { revalidate: 300 } 
+      cache: 'no-store' 
     });
     if (response.status === 404) {
       return null;
@@ -29,7 +28,7 @@ export async function fetchLastTenResults(): Promise<{ data: LotteryResult[]; er
   const results: LotteryResult[] = [];
   try {
     const latestContestResponse = await fetch(MEGA_SENA_API_URL, {
-      next: { revalidate: 300 } // Revalidate every 5 minutes
+      cache: 'no-store'
     });
 
     if (!latestContestResponse.ok) {
