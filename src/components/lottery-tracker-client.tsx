@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useTransition, useCallback } from "react";
 import { fetchLastTenResults } from "@/lib/actions";
-// import { suggestNumbers } from "@/ai/flows/suggest-numbers-flow";
+import { suggestNumbers } from "@/ai/flows/suggest-numbers-flow";
 import type { LotteryResult } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 
@@ -103,25 +103,21 @@ export function LotteryTrackerClient({ initialResults, initialError }: LotteryTr
     setSuggestedNumbers([]);
     setSuggestionExplanation(null);
     try {
-      // const historyForAI = results.map(r => ({
-      //   numero: r.numero,
-      //   listaDezenas: r.listaDezenas || [],
-      // }));
+      const historyForAI = results.map(r => ({
+        numero: r.numero,
+        listaDezenas: r.listaDezenas || [],
+      }));
 
-      // const response = await suggestNumbers({ history: historyForAI });
-      // setSuggestedNumbers(response.suggestedNumbers);
-      // setSuggestionExplanation(response.explanation);
-      toast({
-        title: "Funcionalidade em Manutenção",
-        description: "A sugestão de dezenas está temporariamente desativada.",
-      })
-
+      const response = await suggestNumbers({ history: historyForAI });
+      setSuggestedNumbers(response.suggestedNumbers);
+      setSuggestionExplanation(response.explanation);
+      
     } catch (error) {
       console.error("Error suggesting numbers:", error);
       toast({
         variant: "destructive",
         title: "Erro na Sugestão",
-        description: "Não foi possível gerar sugestões no momento.",
+        description: "Não foi possível gerar sugestões. Verifique se a GEMINI_API_KEY está configurada corretamente.",
       });
     } finally {
       setIsSuggesting(false);
@@ -233,7 +229,7 @@ export function LotteryTrackerClient({ initialResults, initialError }: LotteryTr
                 <AlertCircle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
                 <AlertTitle className="font-bold text-yellow-800 dark:text-yellow-300">Aviso sobre o CORS</AlertTitle>
                 <AlertDescription className="text-yellow-700 dark:text-yellow-400">
-                  Se os dados não carregarem, pode ser devido à política de segurança CORS da API da Caixa ao rodar o projeto localmente. A execução em um ambiente de servidor (como com `npm run dev`) geralmente resolve o problema.
+                  Se os dados não carregarem, pode ser devido à política de segurança CORS da API da Caixa ao rodar o projeto localmente. A execução em um ambiente de servidor (como com `npm run dev` ou em produção na Vercel) geralmente resolve o problema.
                 </AlertDescription>
             </Alert>
         </CardContent>
