@@ -4,11 +4,16 @@ import type { LotteryResult } from '@/lib/types';
 
 const MEGA_SENA_API_URL = 'https://servicebus2.caixa.gov.br/portaldeloterias/api/megasena';
 
+const fetchOptions: RequestInit = {
+  cache: 'no-store',
+  headers: {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+  }
+};
+
 async function fetchContest(contestNumber: number): Promise<LotteryResult | null> {
   try {
-    const response = await fetch(`${MEGA_SENA_API_URL}/${contestNumber}`, {
-      cache: 'no-store' 
-    });
+    const response = await fetch(`${MEGA_SENA_API_URL}/${contestNumber}`, fetchOptions);
     if (response.status === 404) {
       return null;
     }
@@ -27,9 +32,7 @@ async function fetchContest(contestNumber: number): Promise<LotteryResult | null
 export async function fetchLastTenResults(): Promise<{ data: LotteryResult[]; error: string | null }> {
   const results: LotteryResult[] = [];
   try {
-    const latestContestResponse = await fetch(MEGA_SENA_API_URL, {
-      cache: 'no-store'
-    });
+    const latestContestResponse = await fetch(MEGA_SENA_API_URL, fetchOptions);
 
     if (!latestContestResponse.ok) {
       throw new Error('Falha ao buscar o último concurso. A API pode estar indisponível.');
