@@ -43,7 +43,7 @@ ${historyText}
 `;
 
   const { output } = await ai.generate({
-      model: googleAI.model('gemini-1.5-pro-latest'),
+      model: googleAI.model('gemini-1.5-flash'),
       prompt: prompt,
       output: {
           schema: SuggestNumbersOutputSchema
