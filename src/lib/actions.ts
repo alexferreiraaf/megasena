@@ -2,29 +2,41 @@
 
 import type { LotteryResult } from '@/lib/types';
 
-const MEGA_SENA_API_URL = 'https://cors-anywhere.herokuapp.com/https://servicebus2.caixa.gov.br/portaldeloterias/api/megasena';
+// This function now fetches data from our own API route,
+// which acts as a reliable proxy to the Caixa API.
+async function fetchFromInternalAPI(path: string = ''): Promise<any> {
+    // We need to construct the absolute URL to our API route.
+    // VERCEL_URL is a system environment variable provided by Vercel.
+    // For local development, we default to localhost.
+    const baseUrl = process.env.VERCEL_URL 
+      ? `https://${process.env.VERCEL_URL}`
+      : 'http://localhost:9002';
+      
+    const url = `${baseUrl}/api/results${path}`;
 
-const fetchOptions: RequestInit = {
-  cache: 'no-store',
-  headers: {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-  }
-};
+    try {
+        const response = await fetch(url, { cache: 'no-store' });
+        if (!response.ok) {
+            const errorBody = await response.text();
+            console.error(`Internal API Error! Status: ${response.status}, URL: ${url}, Body: ${errorBody}`);
+            throw new Error('Falha na comunicação com o servidor interno.');
+        }
+        return await response.json();
+    } catch (error) {
+        console.error(`Failed to fetch from internal API: ${url}`, error);
+        throw error;
+    }
+}
+
 
 async function fetchContest(contestNumber: number): Promise<LotteryResult | null> {
   try {
-    const response = await fetch(`${MEGA_SENA_API_URL}/${contestNumber}`, fetchOptions);
-    if (response.status === 404) {
-      return null;
-    }
-    if (!response.ok) {
-      console.error(`HTTP Error! Status: ${response.status} for contest ${contestNumber}`);
-      return null;
-    }
-    const data = await response.json();
+    // Fetch individual contests through our internal API route
+    const data = await fetchFromInternalAPI(`/${contestNumber}`);
     return data as LotteryResult;
   } catch (error) {
-    console.error(`Failed to fetch contest ${contestNumber}:`, error);
+    // The error is already logged in fetchFromInternalAPI,
+    // so we just return null to signal a failure for this specific contest.
     return null;
   }
 }
@@ -32,15 +44,14 @@ async function fetchContest(contestNumber: number): Promise<LotteryResult | null
 export async function fetchLastTenResults(): Promise<{ data: LotteryResult[]; error: string | null }> {
   const results: LotteryResult[] = [];
   try {
-    const latestContestResponse = await fetch(MEGA_SENA_API_URL, fetchOptions);
-
-    if (!latestContestResponse.ok) {
-      throw new Error('Falha ao buscar o último concurso. A API pode estar indisponível.');
+    // First, fetch the latest contest to get its number
+    const latestContestData = await fetchFromInternalAPI() as LotteryResult;
+    if (!latestContestData || !latestContestData.numero) {
+        throw new Error('Não foi possível obter o número do último concurso.');
     }
-
-    const latestContestData = await latestContestResponse.json() as LotteryResult;
     const lastContestNumber = latestContestData.numero;
 
+    // Then, create promises to fetch the last 10 contests
     const promises: Promise<LotteryResult | null>[] = [];
     for (let i = 0; i < 10; i++) {
       const contestNumber = lastContestNumber - i;
@@ -58,19 +69,16 @@ export async function fetchLastTenResults(): Promise<{ data: LotteryResult[]; er
     });
 
     if (results.length === 0) {
-      throw new Error("Nenhum resultado pôde ser buscado. A API pode estar com problemas.");
+      throw new Error("Nenhum resultado pôde ser buscado. A API da Caixa pode estar com problemas.");
     }
     
+    // Sort results from newest to oldest
     results.sort((a, b) => b.numero - a.numero);
 
     return { data: results, error: null };
   } catch (error) {
     console.error('Error in fetchLastTenResults:', error);
     const errorMessage = error instanceof Error ? error.message : 'Ocorreu um erro desconhecido.';
-    
-    if (errorMessage.includes('fetch')) {
-      return { data: [], error: "ERRO DE CONEXÃO (CORS ou Rede). Verifique o aviso no final da página para mais detalhes." };
-    }
     return { data: [], error: errorMessage };
   }
 }
