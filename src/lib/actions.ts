@@ -2,7 +2,7 @@
 
 import type { LotteryResult } from '@/lib/types';
 
-const MEGA_SENA_API_URL = 'https://servicebus2.caixa.gov.br/portaldeloterias/api/megasena';
+const MEGA_SENA_API_URL = 'https://cors-anywhere.herokuapp.com/https://servicebus2.caixa.gov.br/portaldeloterias/api/megasena';
 
 const fetchOptions: RequestInit = {
   cache: 'no-store',
