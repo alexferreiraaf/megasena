@@ -163,11 +163,11 @@ export function LotteryTrackerClient({ initialResults, initialError }: LotteryTr
             
             <ResultsTable results={filteredResults} isLoading={isPending && results.length === 0} />
 
-            <Alert className="mt-8 border-yellow-200 bg-yellow-50 text-yellow-900 dark:border-yellow-900/50 dark:bg-yellow-950/20 dark:text-yellow-200">
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle className="font-bold">Aviso sobre o CORS</AlertTitle>
+            <Alert className="mt-8 border-yellow-300 bg-yellow-100/80 text-yellow-950 dark:border-yellow-900/50 dark:bg-yellow-950/60 dark:text-yellow-200">
+              <AlertCircle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
+              <AlertTitle className="font-bold">O que é o aviso de CORS?</AlertTitle>
               <AlertDescription>
-                Se os dados não carregarem, pode ser devido à política de segurança CORS da API da Caixa ao rodar o projeto localmente. A execução em um ambiente de servidor (como com `npm run dev` ou em produção na Vercel) geralmente resolve o problema.
+                Por segurança, o navegador bloqueia pedidos de dados de um site local (`localhost`) para um servidor externo, como a API da Caixa. Isso é o CORS. Ao rodar o projeto em um ambiente de servidor (com `npm run dev` ou em produção), a comunicação é permitida e o erro desaparece.
               </AlertDescription>
             </Alert>
         </CardContent>
