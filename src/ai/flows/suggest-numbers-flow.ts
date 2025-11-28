@@ -27,38 +27,28 @@ export type SuggestNumbersOutput = z.infer<typeof SuggestNumbersOutputSchema>;
 
 
 export async function suggestNumbers(input: SuggestNumbersInput): Promise<SuggestNumbersOutput> {
-  return suggestNumbersFlow(input);
-}
+  
+  const historyText = input.history.map(
+    (h) => `- Concurso ${h.numero}: ${h.listaDezenas.join(', ')}`
+  ).join('\n');
 
-const suggestNumbersPrompt = ai.definePrompt({
-    name: 'suggestNumbersPrompt',
-    input: { schema: SuggestNumbersInputSchema },
-    output: { schema: SuggestNumbersOutputSchema },
-    prompt: `Você é um analista de dados experiente e especialista em padrões de loteria. Sua tarefa é analisar o histórico de resultados da Mega-Sena e fornecer uma sugestão de 6 dezenas para o próximo concurso.
+  const prompt = `Você é um analista de dados experiente e especialista em padrões de loteria. Sua tarefa é analisar o histórico de resultados da Mega-Sena e fornecer uma sugestão de 6 dezenas para o próximo concurso.
 
 Sua análise deve ser baseada puramente em dados estatísticos, como frequência de dezenas, dezenas "quentes" (mais sorteadas recentemente) e "frias" (menos sorteadas). Evite misticismo ou sorte.
 
 Baseado na sua análise, forneça as 6 dezenas sugeridas e uma explicação clara e concisa sobre a metodologia estatística que você empregou para chegar a essa combinação.
 
 Histórico dos últimos concursos:
-{{#each history}}
-- Concurso {{numero}}: {{#each listaDezenas}}{{.}}{{#unless @last}}, {{/unless}}{{/each}}
-{{/each}}
-`,
-});
+${historyText}
+`;
 
-const suggestNumbersFlow = ai.defineFlow(
-  {
-    name: 'suggestNumbersFlow',
-    inputSchema: SuggestNumbersInputSchema,
-    outputSchema: SuggestNumbersOutputSchema,
-  },
-  async (input) => {
-    const { output } = await ai.generate({
-        model: googleAI.model('gemini-1.5-pro-latest'),
-        prompt: suggestNumbersPrompt,
-        input: input,
-    });
-    return output!;
-  }
-);
+  const { output } = await ai.generate({
+      model: googleAI.model('gemini-1.5-pro-latest'),
+      prompt: prompt,
+      output: {
+          schema: SuggestNumbersOutputSchema
+      }
+  });
+  
+  return output!;
+}
