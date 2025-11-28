@@ -163,10 +163,10 @@ export function LotteryTrackerClient({ initialResults, initialError }: LotteryTr
             
             <ResultsTable results={filteredResults} isLoading={isPending && results.length === 0} />
 
-            <Alert className="mt-8 bg-yellow-100/50 dark:bg-yellow-950/30 border-yellow-400/50 dark:border-yellow-900">
-              <AlertCircle className="h-4 w-4 text-yellow-600 dark:text-yellow-500" />
-              <AlertTitle className="font-bold text-yellow-800 dark:text-yellow-400">Aviso sobre o CORS</AlertTitle>
-              <AlertDescription className="text-yellow-700 dark:text-yellow-500/80">
+            <Alert className="mt-8 border-yellow-200 bg-yellow-50 text-yellow-900 dark:border-yellow-900/50 dark:bg-yellow-950/20 dark:text-yellow-200">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle className="font-bold">Aviso sobre o CORS</AlertTitle>
+              <AlertDescription>
                 Se os dados não carregarem, pode ser devido à política de segurança CORS da API da Caixa ao rodar o projeto localmente. A execução em um ambiente de servidor (como com `npm run dev` ou em produção na Vercel) geralmente resolve o problema.
               </AlertDescription>
             </Alert>
