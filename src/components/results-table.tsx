@@ -26,7 +26,6 @@ interface ResultsTableProps {
 export function ResultsTable({ results, isLoading }: ResultsTableProps) {
     if (isLoading) {
         return (
-          <div className="overflow-x-auto shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg">
             <div className="space-y-2 p-4">
               {Array.from({ length: 10 }).map((_, i) => (
                 <div key={i} className="flex items-center space-x-4 p-2">
@@ -39,13 +38,12 @@ export function ResultsTable({ results, isLoading }: ResultsTableProps) {
                 </div>
               ))}
             </div>
-          </div>
         );
     }
 
   return (
     <div className="overflow-x-auto shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg">
-      <Table>
+      <Table className="min-w-[640px]">
         <TableHeader>
           <TableRow>
             <TableHead className="w-[100px]">Concurso</TableHead>
