@@ -227,9 +227,9 @@ export function LotteryTrackerClient({ initialResults, initialError }: LotteryTr
 
             <Alert className="mt-8 border-yellow-300 bg-yellow-100/80 text-yellow-950 dark:border-yellow-900/50 dark:bg-yellow-950/60 dark:text-yellow-200">
               <AlertCircle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
-              <AlertTitle className="font-bold">O que é o aviso de CORS?</AlertTitle>
+              <AlertTitle className="font-bold">Aviso sobre a API da Caixa</AlertTitle>
               <AlertDescription>
-                Ao rodar localmente, o navegador pode bloquear pedidos de dados de um site (`localhost`) para um servidor externo (API da Caixa) por segurança. Isso é o CORS. Ao rodar o projeto em um ambiente de produção como a Vercel, a comunicação é permitida e o erro desaparece, pois não é mais `localhost`.
+                A API oficial da Caixa possui restrições de segurança (CORS) que bloqueiam o acesso direto a partir de navegadores ou servidores na nuvem (como a Vercel). Por isso, esta aplicação pode funcionar localmente mas apresentar falhas de conexão ao ser publicada. Este é um comportamento esperado devido às políticas da API externa.
               </AlertDescription>
             </Alert>
         </CardContent>
