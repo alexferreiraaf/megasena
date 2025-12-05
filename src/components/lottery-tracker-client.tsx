@@ -10,10 +10,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ThemeToggleButton } from "@/components/theme-toggle-button";
 import { ResultsTable } from "@/components/results-table";
-import { AlertCircle, Search } from "lucide-react";
+import { Search } from "lucide-react";
 
 interface LotteryTrackerClientProps {
   initialResults: LotteryResult[];
@@ -45,6 +44,7 @@ export function LotteryTrackerClient({ initialResults, initialError }: LotteryTr
         description: initialError,
       });
     } else if (initialResults.length > 0) {
+      setResults(initialResults);
       setStatus(`${initialResults.length} concursos carregados com sucesso.`);
       setLastUpdate(new Date());
     } else {
@@ -53,8 +53,7 @@ export function LotteryTrackerClient({ initialResults, initialError }: LotteryTr
   }, [initialError, initialResults, toast]);
   
   useEffect(() => {
-      // This effect runs only on the client after hydration
-      if (initialResults.length > 0 && !lastUpdate) {
+      if (typeof window !== 'undefined' && initialResults.length > 0 && !lastUpdate) {
           setLastUpdate(new Date());
       }
   }, [initialResults, lastUpdate]);
@@ -86,7 +85,6 @@ export function LotteryTrackerClient({ initialResults, initialError }: LotteryTr
           title: "Erro na Atualização",
           description: error,
         });
-        // Do not clear results on error, keep the old ones if available
       } else {
         setResults(data);
         setStatus(`${data.length} concursos carregados com sucesso.`);
@@ -134,7 +132,7 @@ export function LotteryTrackerClient({ initialResults, initialError }: LotteryTr
                 return newResults;
             });
             setStatus(`Concurso ${data.numero} adicionado à lista.`);
-            setSearchConcurso(""); // Limpa o input após a busca
+            setSearchConcurso("");
         }
     });
 }, [searchConcurso, toast]);
@@ -224,14 +222,7 @@ export function LotteryTrackerClient({ initialResults, initialError }: LotteryTr
             )}
             
             <ResultsTable results={filteredResults} isLoading={isPending && results.length === 0} />
-
-            <Alert className="mt-8 border-yellow-300 bg-yellow-100/80 text-yellow-950 dark:border-yellow-900/50 dark:bg-yellow-950/60 dark:text-yellow-200">
-              <AlertCircle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
-              <AlertTitle className="font-bold">Aviso sobre a API da Caixa</AlertTitle>
-              <AlertDescription>
-                A API oficial da Caixa possui restrições de segurança (CORS) que bloqueiam o acesso direto a partir de navegadores ou servidores na nuvem (como a Vercel). Por isso, esta aplicação pode funcionar localmente mas apresentar falhas de conexão ao ser publicada. Este é um comportamento esperado devido às políticas da API externa.
-              </AlertDescription>
-            </Alert>
+            
         </CardContent>
       </Card>
     </div>

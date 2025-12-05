@@ -2,32 +2,31 @@
 
 import type { LotteryResult } from '@/lib/types';
 
-const MEGA_SENA_API_URL = 'https://servicebus2.caixa.gov.br/portaldeloterias/api/megasena';
+// Usando um proxy para evitar problemas de CORS/bloqueio da API da Caixa em produção
+const MEGA_SENA_API_URL = 'https://loteriascaixa-api.herokuapp.com/api/megasena';
 
 async function fetchFromCaixaAPI(path: string = ''): Promise<any> {
     const fullApiUrl = `${MEGA_SENA_API_URL}${path}`;
     try {
-        const apiResponse = await fetch(fullApiUrl, {
-            // Revalidate every 5 minutes
-            next: { revalidate: 300 },
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-            }
-        });
+        // A Vercel faz cache de requisições fetch por padrão. `no-cache` garante que sempre teremos os dados mais recentes.
+        const apiResponse = await fetch(fullApiUrl, { cache: 'no-store' });
 
         if (!apiResponse.ok) {
             const errorBody = await apiResponse.text();
-            console.error(`Caixa API Error! Status: ${apiResponse.status}, URL: ${fullApiUrl}, Body: ${errorBody}`);
-            throw new Error('Falha ao buscar dados da Caixa.');
+            console.error(`Proxy API Error! Status: ${apiResponse.status}, URL: ${fullApiUrl}, Body: ${errorBody}`);
+            throw new Error('Falha ao buscar dados do proxy da Caixa.');
         }
-        return await apiResponse.json();
+        
+        // A API de proxy retorna uma lista para o endpoint base, então precisamos pegar o primeiro item.
+        const data = await apiResponse.json();
+        if (path === '' && Array.isArray(data) && data.length > 0) {
+            return data[0];
+        }
+        return data;
+
     } catch (error) {
-        console.error(`Failed to fetch from Caixa API: ${fullApiUrl}`, error);
-        // Re-throw a more generic error to the client
-        if (error instanceof Error && error.message.includes('CORS')) {
-          throw new Error('Erro de CORS. Execute em um ambiente de servidor (npm run dev) ou em produção.');
-        }
-        throw new Error('Ocorreu um erro ao se comunicar com a API da Caixa.');
+        console.error(`Failed to fetch from Proxy API: ${fullApiUrl}`, error);
+        throw new Error('Ocorreu um erro ao se comunicar com a API de loterias.');
     }
 }
 
@@ -45,35 +44,18 @@ async function fetchContest(contestNumber: number): Promise<LotteryResult | null
 export async function fetchLastTenResults(): Promise<{ data: LotteryResult[]; error: string | null }> {
   const results: LotteryResult[] = [];
   try {
-    const latestContestData = await fetchFromCaixaAPI() as LotteryResult;
-    if (!latestContestData || !latestContestData.numero) {
-        throw new Error('Não foi possível obter o número do último concurso.');
-    }
-    const lastContestNumber = latestContestData.numero;
+    // A API de proxy retorna os resultados em um array, vamos buscar a lista toda de uma vez.
+    const allResults = await fetch(MEGA_SENA_API_URL, { cache: 'no-store' }).then(res => res.json());
 
-    const promises: Promise<LotteryResult | null>[] = [];
-    for (let i = 0; i < 10; i++) {
-      const contestNumber = lastContestNumber - i;
-      if (contestNumber > 0) {
-        promises.push(fetchContest(contestNumber));
-      }
+    if (!allResults || !Array.isArray(allResults) || allResults.length === 0) {
+        throw new Error('Não foi possível obter os resultados da API de proxy.');
     }
 
-    const settledResults = await Promise.all(promises);
-
-    settledResults.forEach(result => {
-      if (result) {
-        results.push(result);
-      }
-    });
-
-    if (results.length === 0) {
-      return { data: [], error: "Nenhum resultado pôde ser buscado. A API da Caixa pode estar com problemas." };
-    }
+    // Pegamos os 10 últimos da lista, que já vem ordenada
+    const lastTen = allResults.slice(0, 10);
     
-    results.sort((a, b) => b.numero - a.numero);
+    return { data: lastTen, error: null };
 
-    return { data: results, error: null };
   } catch (error) {
     console.error('Error in fetchLastTenResults:', error);
     const errorMessage = error instanceof Error ? error.message : 'Ocorreu um erro desconhecido.';
