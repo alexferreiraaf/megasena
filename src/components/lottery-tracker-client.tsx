@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, useTransition, useCallback } from "react";
-import { fetchLastTenResults } from "@/lib/actions";
+import { fetchLastTenResults, fetchSpecificContest } from "@/lib/actions";
 import type { LotteryResult } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 
@@ -12,7 +12,7 @@ import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ThemeToggleButton } from "@/components/theme-toggle-button";
 import { ResultsTable } from "@/components/results-table";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Search } from "lucide-react";
 
 interface LotteryTrackerClientProps {
   initialResults: LotteryResult[];
@@ -22,12 +22,14 @@ interface LotteryTrackerClientProps {
 export function LotteryTrackerClient({ initialResults, initialError }: LotteryTrackerClientProps) {
   const [results, setResults] = useState<LotteryResult[]>(initialResults);
   const [isPending, startTransition] = useTransition();
+  const [isSearching, startSearchTransition] = useTransition();
   const [progress, setProgress] = useState(0);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [clientLastUpdate, setClientLastUpdate] = useState<Date | null>(null);
   const [status, setStatus] = useState("Pronto para consulta.");
 
   const [filterConcurso, setFilterConcurso] = useState("");
+  const [searchConcurso, setSearchConcurso] = useState("");
   const [filterData, setFilterData] = useState("");
   const [filterDezenas, setFilterDezenas] = useState("");
 
@@ -45,14 +47,14 @@ export function LotteryTrackerClient({ initialResults, initialError }: LotteryTr
       setStatus(`${initialResults.length} concursos carregados com sucesso.`);
       setLastUpdate(new Date());
     }
-  }, [initialError, toast, initialResults.length]);
+  }, [initialError, toast, initialResults]);
   
   useEffect(() => {
       // This effect runs only on the client after hydration
       if (initialResults.length > 0) {
           setLastUpdate(new Date());
       }
-  }, [initialResults.length]);
+  }, [initialResults]);
 
   useEffect(() => {
       if (lastUpdate) {
@@ -91,6 +93,48 @@ export function LotteryTrackerClient({ initialResults, initialError }: LotteryTr
       setTimeout(() => setProgress(0), 1000);
     });
   }, [toast]);
+
+  const handleSearchContest = useCallback(() => {
+    const contestNumber = parseInt(searchConcurso, 10);
+    if (!contestNumber) {
+        toast({
+            variant: "destructive",
+            title: "Busca Inválida",
+            description: "Por favor, insira um número de concurso válido.",
+        });
+        return;
+    }
+
+    startSearchTransition(async () => {
+        setStatus(`Buscando concurso ${contestNumber}...`);
+        const { data, error } = await fetchSpecificContest(contestNumber);
+        
+        if (error) {
+            setStatus(error);
+            toast({
+                variant: "destructive",
+                title: "Erro na Busca",
+                description: error,
+            });
+        } else if (data) {
+            setResults(prevResults => {
+                const contestExists = prevResults.some(r => r.numero === data.numero);
+                if (contestExists) {
+                    toast({
+                        title: "Concurso Já Exibido",
+                        description: `O concurso ${data.numero} já está na lista.`
+                    });
+                    return prevResults;
+                }
+                const newResults = [data, ...prevResults];
+                newResults.sort((a, b) => b.numero - a.numero);
+                return newResults;
+            });
+            setStatus(`Concurso ${data.numero} adicionado à lista.`);
+            setSearchConcurso(""); // Limpa o input após a busca
+        }
+    });
+}, [searchConcurso, toast]);
 
 
   useEffect(() => {
@@ -147,17 +191,32 @@ export function LotteryTrackerClient({ initialResults, initialError }: LotteryTr
             </div>
             
             <div className="space-y-4 mb-8 p-4 border rounded-lg bg-secondary/50">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <Input type="number" placeholder="Pesquisar por Concurso" value={filterConcurso} onChange={e => setFilterConcurso(e.target.value)} disabled={isPending} />
-                  <Input type="text" placeholder="Data (ex: 20/05)" value={filterData} onChange={e => setFilterData(e.target.value)} disabled={isPending} />
-                  <Input type="text" placeholder="Dezenas (ex: 10,25)" value={filterDezenas} onChange={e => setFilterDezenas(e.target.value)} disabled={isPending} />
-              </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+                    <div className="flex gap-2">
+                        <Input 
+                            type="number" 
+                            placeholder="Buscar concurso..." 
+                            value={searchConcurso} 
+                            onChange={e => setSearchConcurso(e.target.value)} 
+                            disabled={isSearching}
+                            onKeyDown={(e) => e.key === 'Enter' && handleSearchContest()}
+                        />
+                        <Button onClick={handleSearchContest} disabled={isSearching} size="icon" aria-label="Buscar Concurso">
+                            <Search className="size-4" />
+                        </Button>
+                    </div>
+                    <Input type="text" placeholder="Data (ex: 20/05)" value={filterData} onChange={e => setFilterData(e.target.value)} disabled={isPending || isSearching} />
+                    <Input type="text" placeholder="Dezenas (ex: 10,25)" value={filterDezenas} onChange={e => setFilterDezenas(e.target.value)} disabled={isPending || isSearching} />
+                </div>
+                <div>
+                  <Input type="number" placeholder="Filtrar por concurso na lista..." value={filterConcurso} onChange={e => setFilterConcurso(e.target.value)} disabled={isPending || isSearching} />
+                </div>
             </div>
 
-            {(isPending || progress > 0) && (
+            {(isPending || progress > 0 || isSearching) && (
               <div className="mb-8 space-y-2">
-                <label className="text-sm font-medium text-muted-foreground">Processando dados...</label>
-                <Progress value={progress} className="w-full" />
+                <label className="text-sm font-medium text-muted-foreground">{isSearching ? "Buscando concurso..." : "Processando dados..."}</label>
+                <Progress value={isSearching ? undefined : progress} className={cn("w-full", isSearching && "animate-pulse")} />
               </div>
             )}
             

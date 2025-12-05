@@ -82,3 +82,20 @@ export async function fetchLastTenResults(): Promise<{ data: LotteryResult[]; er
     return { data: [], error: errorMessage };
   }
 }
+
+export async function fetchSpecificContest(contestNumber: number): Promise<{ data: LotteryResult | null; error: string | null }> {
+    if (!contestNumber || contestNumber <= 0) {
+        return { data: null, error: "Número do concurso inválido." };
+    }
+    try {
+        const result = await fetchContest(contestNumber);
+        if (!result) {
+            return { data: null, error: `Concurso ${contestNumber} não encontrado.` };
+        }
+        return { data: result, error: null };
+    } catch (error) {
+        console.error(`Error fetching contest ${contestNumber}:`, error);
+        const errorMessage = error instanceof Error ? error.message : 'Ocorreu um erro desconhecido.';
+        return { data: null, error: errorMessage };
+    }
+}
