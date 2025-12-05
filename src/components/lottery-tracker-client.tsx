@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo, useTransition, useCallback } from "react"
 import { fetchLastTenResults, fetchSpecificContest } from "@/lib/actions";
 import type { LotteryResult } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
