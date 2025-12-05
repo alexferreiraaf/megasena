@@ -41,21 +41,23 @@ export function LotteryTrackerClient({ initialResults, initialError }: LotteryTr
       setStatus(initialError);
       toast({
         variant: "destructive",
-        title: "Erro ao Carregar Dados",
+        title: "Erro ao Carregar Dados Iniciais",
         description: initialError,
       });
     } else if (initialResults.length > 0) {
       setStatus(`${initialResults.length} concursos carregados com sucesso.`);
       setLastUpdate(new Date());
+    } else {
+        setStatus("Não foi possível carregar os dados iniciais.");
     }
-  }, [initialError, toast, initialResults]);
+  }, [initialError, initialResults, toast]);
   
   useEffect(() => {
       // This effect runs only on the client after hydration
-      if (initialResults.length > 0) {
+      if (initialResults.length > 0 && !lastUpdate) {
           setLastUpdate(new Date());
       }
-  }, [initialResults]);
+  }, [initialResults, lastUpdate]);
 
   useEffect(() => {
       if (lastUpdate) {
@@ -84,7 +86,7 @@ export function LotteryTrackerClient({ initialResults, initialError }: LotteryTr
           title: "Erro na Atualização",
           description: error,
         });
-        setResults([]);
+        // Do not clear results on error, keep the old ones if available
       } else {
         setResults(data);
         setStatus(`${data.length} concursos carregados com sucesso.`);
@@ -227,7 +229,7 @@ export function LotteryTrackerClient({ initialResults, initialError }: LotteryTr
               <AlertCircle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
               <AlertTitle className="font-bold">O que é o aviso de CORS?</AlertTitle>
               <AlertDescription>
-                Por segurança, o navegador bloqueia pedidos de dados de um site local (`localhost`) para um servidor externo, como a API da Caixa. Isso é o CORS. Ao rodar o projeto em um ambiente de servidor (com `npm run dev` ou em produção), a comunicação é permitida e o erro desaparece.
+                Ao rodar localmente, o navegador pode bloquear pedidos de dados de um site (`localhost`) para um servidor externo (API da Caixa) por segurança. Isso é o CORS. Ao rodar o projeto em um ambiente de produção como a Vercel, a comunicação é permitida e o erro desaparece, pois não é mais `localhost`.
               </AlertDescription>
             </Alert>
         </CardContent>

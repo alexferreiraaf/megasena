@@ -2,41 +2,42 @@
 
 import type { LotteryResult } from '@/lib/types';
 
-// This function now fetches data from our own API route,
-// which acts as a reliable proxy to the Caixa API.
-async function fetchFromInternalAPI(path: string = ''): Promise<any> {
-    // We need to construct the absolute URL to our API route.
-    // VERCEL_URL is a system environment variable provided by Vercel.
-    // For local development, we default to localhost.
-    const baseUrl = process.env.VERCEL_URL 
-      ? `https://${process.env.VERCEL_URL}`
-      : 'http://localhost:9002';
-      
-    const url = `${baseUrl}/api/results${path}`;
+const MEGA_SENA_API_URL = 'https://servicebus2.caixa.gov.br/portaldeloterias/api/megasena';
 
+async function fetchFromCaixaAPI(path: string = ''): Promise<any> {
+    const fullApiUrl = `${MEGA_SENA_API_URL}${path}`;
     try {
-        const response = await fetch(url, { cache: 'no-store' });
-        if (!response.ok) {
-            const errorBody = await response.text();
-            console.error(`Internal API Error! Status: ${response.status}, URL: ${url}, Body: ${errorBody}`);
-            throw new Error('Falha na comunicação com o servidor interno.');
+        const apiResponse = await fetch(fullApiUrl, {
+            // Revalidate every 5 minutes
+            next: { revalidate: 300 },
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            }
+        });
+
+        if (!apiResponse.ok) {
+            const errorBody = await apiResponse.text();
+            console.error(`Caixa API Error! Status: ${apiResponse.status}, URL: ${fullApiUrl}, Body: ${errorBody}`);
+            throw new Error('Falha ao buscar dados da Caixa.');
         }
-        return await response.json();
+        return await apiResponse.json();
     } catch (error) {
-        console.error(`Failed to fetch from internal API: ${url}`, error);
-        throw error;
+        console.error(`Failed to fetch from Caixa API: ${fullApiUrl}`, error);
+        // Re-throw a more generic error to the client
+        if (error instanceof Error && error.message.includes('CORS')) {
+          throw new Error('Erro de CORS. Execute em um ambiente de servidor (npm run dev) ou em produção.');
+        }
+        throw new Error('Ocorreu um erro ao se comunicar com a API da Caixa.');
     }
 }
 
 
 async function fetchContest(contestNumber: number): Promise<LotteryResult | null> {
   try {
-    // Fetch individual contests through our internal API route
-    const data = await fetchFromInternalAPI(`/${contestNumber}`);
+    const data = await fetchFromCaixaAPI(`/${contestNumber}`);
     return data as LotteryResult;
   } catch (error) {
-    // The error is already logged in fetchFromInternalAPI,
-    // so we just return null to signal a failure for this specific contest.
+    console.error(`Error fetching individual contest ${contestNumber}:`, error);
     return null;
   }
 }
@@ -44,14 +45,12 @@ async function fetchContest(contestNumber: number): Promise<LotteryResult | null
 export async function fetchLastTenResults(): Promise<{ data: LotteryResult[]; error: string | null }> {
   const results: LotteryResult[] = [];
   try {
-    // First, fetch the latest contest to get its number
-    const latestContestData = await fetchFromInternalAPI() as LotteryResult;
+    const latestContestData = await fetchFromCaixaAPI() as LotteryResult;
     if (!latestContestData || !latestContestData.numero) {
         throw new Error('Não foi possível obter o número do último concurso.');
     }
     const lastContestNumber = latestContestData.numero;
 
-    // Then, create promises to fetch the last 10 contests
     const promises: Promise<LotteryResult | null>[] = [];
     for (let i = 0; i < 10; i++) {
       const contestNumber = lastContestNumber - i;
@@ -69,10 +68,9 @@ export async function fetchLastTenResults(): Promise<{ data: LotteryResult[]; er
     });
 
     if (results.length === 0) {
-      throw new Error("Nenhum resultado pôde ser buscado. A API da Caixa pode estar com problemas.");
+      return { data: [], error: "Nenhum resultado pôde ser buscado. A API da Caixa pode estar com problemas." };
     }
     
-    // Sort results from newest to oldest
     results.sort((a, b) => b.numero - a.numero);
 
     return { data: results, error: null };
@@ -90,7 +88,7 @@ export async function fetchSpecificContest(contestNumber: number): Promise<{ dat
     try {
         const result = await fetchContest(contestNumber);
         if (!result) {
-            return { data: null, error: `Concurso ${contestNumber} não encontrado.` };
+            return { data: null, error: `Concurso ${contestNumber} não encontrado ou a API falhou.` };
         }
         return { data: result, error: null };
     } catch (error) {
